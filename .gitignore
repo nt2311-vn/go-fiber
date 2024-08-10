@@ -9,3 +9,5 @@ bin/
 
 # tmp dir
 tmp/
+
+# node_modules
