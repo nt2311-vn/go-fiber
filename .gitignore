@@ -1,0 +1,11 @@
+# ignore bin
+bin/
+
+# environment
+.env
+
+# templ.go
+*templ.go
+
+# tmp dir
+tmp/
