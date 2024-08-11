@@ -8,7 +8,7 @@ templ Layout(children ...templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Finance Apps</title>
 			<link rel="stylesheet" href="/static/css/tailwindcss.css"/>
-			<script src="/static/js/themePicker.js"></script>
+			<script src="/static/js/layoutAction.js" defer></script>
 		</head>
 		<body class="bg-base-100">
 			<div class="min-h-screen flex flex-col">
@@ -16,6 +16,7 @@ templ Layout(children ...templ.Component) {
 					@child
 				}
 			</div>
+			@Footer()
 		</body>
 	</html>
 }

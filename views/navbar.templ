@@ -1,55 +1,40 @@
 package views
 
 templ Navbar(isAuthenticated bool) {
-	<nav class="shadow-2xl bg-base-300">
+	<nav class="shadow-2xl">
 		<div class="container mx-auto px-4">
 			<div class="flex justify-between items-center py-4">
-				<div class="flex items-center">
+				<div class="flex items-center space-x-4">
 					<a href="/" class="text-2xl font-bold">
-						<img src="/static/logo.svg" alt="Company Logo" class="size-8"/>
+						<img src="/static/icon/company_logo.png" alt="Company Logo" class="h-8"/>
 					</a>
 				</div>
-				<div class="hidden md:flex items-center space-x-4">
-					<a href="/dashboard" class="text-slate-700 dark:text-slate-300 transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400">Dashboard</a>
-					<a href="/reports" class="text-slate-700 dark:text-slate-300 transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400">Reports</a>
-					<a href="/settings" class="text-slate-700 dark:text-slate-300 transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400">Settings</a>
+				<div class="hidden md:flex items-center space-x-4 flex-grow justify-center">
+					<a href="/dashboard" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Dashboard</a>
+					<a href="/reports" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Reports</a>
+					<a href="/settings" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Settings</a>
+				</div>
+				<div class="flex items-center space-x-4">
 					if isAuthenticated {
 						<div class="relative">
-							<button class="flex items-center space-x-2 focus:outline-none">
-								<img src="/static/icon/user.svg" alt="User Icon" class="w-6 h-6"/>
-								<span>User Name</span>
+							<button id="user-menu-button" class="flex items-center space-x-2 focus:outline-none">
+								<img src="/static/icon/user.svg" alt="User Icon" class="w-8 h-8 rounded-full border border-gray-300"/>
+								<span class="hidden md:inline">User Name</span>
 							</button>
-							<div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-20">
-								<a href="/profile" class="block px-4 py-2  ">Profile</a>
-								<a href="/logout" class="block px-4 py-2  ">Logout</a>
+							<div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-20 hidden">
+								<a href="/profile" class="block px-4 py-2">Profile</a>
+								<a href="/logout" class="block px-4 py-2">Logout</a>
 							</div>
 						</div>
 					} else {
-						<a href="/login" class="text-slate-700 dark:text-slate-300 transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400">Login</a>
+						<a href="/login" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Login</a>
 					}
-				</div>
-				<div class="md:hidden flex items-center">
-					<button class="outline-none mobile-menu-button">
-						<svg class="w-6 h-6  hover:text-link-hover" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-							<path d="M4 6h16M4 12h16m-7 6h7"></path>
-						</svg>
+					<button id="theme-toggle-button" class="flex items-center p-2">
+						<img src="/static/icon/sun.svg" alt="Sun Icon" id="sun-icon" class="w-6 h-6 hidden"/>
+						<img src="/static/icon/moon.svg" alt="Moon Icon" id="moon-icon" class="w-6 h-6"/>
 					</button>
 				</div>
 			</div>
-		</div>
-		<!-- Mobile Menu -->
-		<div class="hidden mobile-menu">
-			<ul class="">
-				<li><a href="/dashboard" class="block text-sm px-2 py-4 hover:bg-base-100">Dashboard</a></li>
-				<li><a href="/reports" class="block text-sm px-2 py-4">Reports</a></li>
-				<li><a href="/settings" class="block text-sm px-2 py-4">Settings</a></li>
-				if isAuthenticated {
-					<li><a href="/profile" class="block text-sm px-2 py-4">Profile</a></li>
-					<li><a href="/logout" class="block text-sm px-2 py-4">Logout</a></li>
-				} else {
-					<li><a href="/login" class="block text-sm px-2 py-4">Login</a></li>
-				}
-			</ul>
 		</div>
 	</nav>
 }
