@@ -13,16 +13,14 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
-
 	listenAddr := os.Getenv("LISTEN_ADDR")
 
 	app := fiber.New()
-	slog.Info("Serving web app on", "address", listenAddr)
 	app.Static("/static", filepath.Join("static"))
-
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello World!")
 	})
 
 	app.Listen(listenAddr)
+	slog.Info("Serving web app on", "address", listenAddr)
 }
