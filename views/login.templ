@@ -1,17 +1,17 @@
 package views
 
 templ Login() {
-	<div class="flex justify-center items-center h-screen bg-base-200">
-		<div class="card w-full max-w-md shadow-2xl bg-base-100">
-			<div class="card-body">
+	<div class="flex justify-center items-center h-screen bg-100">
+		<div class="card w-full max-w-md shadow-2xl bg-base-300 rounded-lg">
+			<div class="card-body p-8">
 				<h2 class="text-2xl font-bold text-center mb-8">Login to Your Account</h2>
-				<a href="/login/slack" class="btn btn-primary w-full mb-4">
-					<img src="/static/icon/slack.svg" alt="Slack icon" class="w-5 h-5 mr-2"/>
-					<span>Login with Slack</span>
+				<a href="/login/slack" class="btn btn-secondary w-full mb-4 flex items-center justify-center hover:bg-indigo-500 dark:hover:bg-indigo-300">
+					<img src="/static/icon/slack.svg" alt="Slack icon" class="size-6 mr-2"/>
+					<span class="text-lg">Login with Slack</span>
 				</a>
-				<a href="/login/jira" class="btn btn-secondary w-full">
-					<img src="/static/icon/jira.svg" alt="Jira icon" class="w-5 h-5 mr-2"/>
-					<span>Login with Jira</span>
+				<a href="/login/jira" class="btn btn-secondary w-full mb-4 flex items-center justify-center hover:bg-indigo-500 dark:hover:bg-indigo-300">
+					<img src="/static/icon/jira.svg" alt="Jira icon" class="size-6 mr-2"/>
+					<span class="text-lg">Login with Jira</span>
 				</a>
 			</div>
 		</div>
