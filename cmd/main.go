@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"github.com/nt2311-vn/go-fiber/internal/routes"
 )
 
 func main() {
@@ -17,9 +18,8 @@ func main() {
 
 	app := fiber.New()
 	app.Static("/static", filepath.Join("static"))
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello World!")
-	})
+
+	routes.Setup(app)
 
 	app.Listen(listenAddr)
 	slog.Info("Serving web app on", "address", listenAddr)
