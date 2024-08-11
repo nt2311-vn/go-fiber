@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/nt2311-vn/go-fiber/components"
+	"github.com/nt2311-vn/go-fiber/views"
 )
 
 func HomeHandler(c *fiber.Ctx) error {
@@ -10,6 +10,6 @@ func HomeHandler(c *fiber.Ctx) error {
 }
 
 func LoginPage(c *fiber.Ctx) error {
-	loginPage := components.Login()
+	loginPage := views.Login()
 	return Render(loginPage)(c)
 }
