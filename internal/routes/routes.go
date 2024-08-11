@@ -7,6 +7,8 @@ import (
 
 func Setup(app *fiber.App) {
 	app.Get("/", handlers.HomeHandler)
-
 	app.Get("/login", handlers.LoginPage)
+
+	app.Get("/login/jira", handlers.JiraLogin)
+	app.Get("/auth/jira/callback", handlers.JiraCallback)
 }
