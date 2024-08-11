@@ -6,10 +6,11 @@ import (
 )
 
 func HomeHandler(c *fiber.Ctx) error {
-	return c.SendString("Hello World")
+	homePage := views.Layout(views.Navbar(false))
+	return Render(homePage)(c)
 }
 
 func LoginPage(c *fiber.Ctx) error {
-	loginPage := views.Login()
+	loginPage := views.Layout(views.Navbar(false), views.Login())
 	return Render(loginPage)(c)
 }

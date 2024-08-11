@@ -1,29 +1,21 @@
 package views
 
-templ Layout() {
+templ Layout(children ...templ.Component) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Finance Apps</title>
-			<link rel="stylesheet" href="/static/css/pico.min.css"/>
+			<link rel="stylesheet" href="/static/css/tailwindcss.css"/>
+			<script src="/static/js/themePicker.js"></script>
 		</head>
-		<style>
-    .footer {
-      text-align: center;
-      padding: 1rem;
-      background-color: var(--background);
-      color:var(--text)
-    }
-    </style>
-		<body>
-			<header class="container">
-				@Navbar()
-			</header>
-			<footer class="footer">
-				@Footer()
-			</footer>
+		<body class="bg-base-100">
+			<div class="min-h-screen flex flex-col">
+				for _, child := range children {
+					@child
+				}
+			</div>
 		</body>
 	</html>
 }
