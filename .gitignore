@@ -12,3 +12,7 @@ tmp/
 
 # node_modules
 node_modules/
+
+# TLS key
+localhost-key.pem
+localhost.pem

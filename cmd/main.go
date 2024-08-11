@@ -16,8 +16,6 @@ func main() {
 		panic(err)
 	}
 	listenAddr := os.Getenv("LISTEN_ADDR")
-	certFile := filepath.Join("localhost.pem")
-	keyFile := filepath.Join("localhost-key.pem")
 
 	app := fiber.New()
 	app.Static("/static", filepath.Join("static"))
@@ -25,9 +23,7 @@ func main() {
 
 	routes.Setup(app)
 
-	if err := app.ListenTLS(listenAddr, certFile, keyFile); err != nil {
-		slog.Error("Failed to start server", "error", err)
-	}
+	app.Listen(listenAddr)
 
 	slog.Info("Serving web app on", "address", listenAddr)
 }
