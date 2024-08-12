@@ -19,11 +19,11 @@ func main() {
 
 	app := fiber.New()
 	app.Static("/static", filepath.Join("static"))
+
 	app.Use(middleware.AuthMiddleWare)
 
 	routes.Setup(app)
+	slog.Info("Serving web app on", "address", listenAddr)
 
 	app.Listen(listenAddr)
-
-	slog.Info("Serving web app on", "address", listenAddr)
 }
