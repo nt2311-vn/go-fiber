@@ -7,14 +7,13 @@ import (
 
 func HomeHandler(c *fiber.Ctx) error {
 	isAuthenticated := c.Get("X-Dev-Access") == "true"
-	homePage := views.Layout(views.Navbar(isAuthenticated))
+	homePage := views.Layout(isAuthenticated)
 	return Render(homePage)(c)
 }
 
 func LoginPage(c *fiber.Ctx) error {
 	isAuthenticated := c.Get("X-Dev-Access") == "true"
-
-	loginPage := views.Layout(views.Navbar(isAuthenticated), views.Login())
+	loginPage := views.Layout(isAuthenticated, views.Login())
 
 	return Render(loginPage)(c)
 }
