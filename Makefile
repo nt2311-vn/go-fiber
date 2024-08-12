@@ -10,7 +10,7 @@ build:
 		templ generate && \
 		go generate ./... && \
 		bunx tailwindcss build -i static/css/style.css -o static/css/tailwindcss.css && \
-	go build -o ./bin/${BINARY_NAME} ./cmd/main.go && \
+	go build -o ./bin/${BINARY_NAME} ./cmd/web/fiber_main.go && \
 	air -c air.toml
 
 clean:
