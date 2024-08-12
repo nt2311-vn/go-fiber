@@ -16,3 +16,6 @@ node_modules/
 # TLS key
 localhost-key.pem
 localhost.pem
+
+# pb_data
+pocketbase/pb_data/
