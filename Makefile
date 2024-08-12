@@ -1,6 +1,9 @@
 .PHONY: build
 
 BINARY_NAME=fin_app
+ifeq ($(OS),Windows_NT)
+	BINARY_NAME=fin_app.exe
+endif
 
 build:
 	go mod tidy && \
