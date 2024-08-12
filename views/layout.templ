@@ -1,17 +1,56 @@
 package views
 
-templ Layout(theme string, children ...templ.Component) {
+templ Layout(isAuthenticated bool, children ...templ.Component) {
 	<!DOCTYPE html>
-	<html lang="en" data-theme={ theme }>
+	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Finance Apps</title>
 			<link rel="stylesheet" href="/static/css/tailwindcss.css"/>
-			<script src="/static/js/layoutAction.js" defer></script>
+			<script src="/static/js/htmx.min.js"></script>
+			<script>
+      if(window.matchMedia('(prefers-color-scheme: dark)').matches){
+        document.documentElement.setAttribute('data-theme', 'business');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'corporate');
+      }
+      </script>
 		</head>
 		<body class="bg-base-100">
 			<div class="min-h-screen flex flex-col">
+				<nav class="shadow-2xl">
+					<div class="container mx-auto px-4">
+						<div class="flex justify-between items-center py-4">
+							<div class="flex items-center space-x-4">
+								<a href="/" class="text-2xl font-bold">
+									<img src="/static/icon/company_logo.png" alt="Company Logo" class="h-8"/>
+								</a>
+							</div>
+							<div class="hidden md:flex items-center space-x-4 flex-grow justify-center">
+								<a href="/dashboard" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Dashboard</a>
+								<a href="/reports" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Reports</a>
+								<a href="/settings" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Settings</a>
+							</div>
+							<div class="flex items-center space-x-4">
+								if isAuthenticated {
+									<div class="relative">
+										<button id="user-menu-button" class="flex items-center space-x-2 focus:outline-none">
+											<img src="/static/icon/user.svg" alt="User Icon" class="w-8 h-8 rounded-full border border-gray-300"/>
+											<span class="hidden md:inline">User Name</span>
+										</button>
+										<div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-20 hidden">
+											<a href="/profile" class="block px-4 py-2">Profile</a>
+											<a href="/logout" class="block px-4 py-2">Logout</a>
+										</div>
+									</div>
+								} else {
+									<a href="/login" class="transition-colors duration-300 hover:text-indigo-500 dark:hover:text-indigo-300">Login</a>
+								}
+							</div>
+						</div>
+					</div>
+				</nav>
 				for _, child := range children {
 					@child
 				}
