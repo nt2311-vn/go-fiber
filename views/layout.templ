@@ -1,8 +1,8 @@
 package views
 
-templ Layout(children ...templ.Component) {
+templ Layout(theme string, children ...templ.Component) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="en" data-theme={ theme }>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
