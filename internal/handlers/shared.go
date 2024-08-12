@@ -12,3 +12,7 @@ func Render(t templ.Component) fiber.Handler {
 		return handler(c)
 	}
 }
+
+func windowPreferTheme() string {
+	return `window.matchMedia('(prefers-color-scheme: dark)').matches ? 'business' : 'corporate'`
+}
