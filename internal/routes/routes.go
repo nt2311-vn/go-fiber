@@ -8,5 +8,5 @@ import (
 func Setup(app *fiber.App) {
 	app.Get("/", handlers.HomeHandler)
 	app.Get("/login", handlers.LoginPage)
-	app.Post("/register", handlers.Register)
+	app.Get("/register", handlers.ReigsterPage)
 }

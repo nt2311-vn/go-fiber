@@ -22,6 +22,12 @@ func LoginPage(c *fiber.Ctx) error {
 	return Render(loginPage)(c)
 }
 
+func ReigsterPage(c *fiber.Ctx) error  {
+	registerPage := views.Layout(false, views.Register())
+
+	return Render(registerPage)(c)
+}
+
 func Register(c *fiber.Ctx) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
