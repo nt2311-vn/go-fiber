@@ -9,8 +9,7 @@ import (
 func HomeHandler(c *fiber.Ctx) error {
 	isAuthenticated := c.Get("X-Dev-Access") == "true"
 	homePage := views.Layout(isAuthenticated)
-	// return Render(homePage)(c)
-	return c.Render(homePage)
+	return Render(homePage)(c)
 }
 
 func LoginPage(c *fiber.Ctx) error {
