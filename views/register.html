@@ -20,7 +20,8 @@
   </head>
   <body class="bg-base-100">
     <div class="min-h-screen flex flex-col">
-      {{ template "navbar" .}} {{ template "registerForm" .}}
+      {{ template "navbar" .}}
+      <main class="flex-grow">{{ template "registerForm" .}}</main>
     </div>
     {{ template "footer" .}}
   </body>
