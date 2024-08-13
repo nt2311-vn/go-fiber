@@ -19,3 +19,6 @@ localhost.pem
 
 # pb_data
 pocketbase/pb_data/
+
+# ignore output tailwindcss
+static/css/tailwindcss.css
