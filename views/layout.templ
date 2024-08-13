@@ -8,7 +8,7 @@ templ Layout(isAuthenticated bool, children ...templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Finance Apps</title>
 			<link rel="stylesheet" href="/static/css/tailwindcss.css"/>
-			<script src="/static/js/htmx.min.js"></script>
+			<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 			<script>
       if(window.matchMedia('(prefers-color-scheme: dark)').matches){
         document.documentElement.setAttribute('data-theme', 'business');
