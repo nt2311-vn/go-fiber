@@ -1,24 +1,30 @@
 package handlers
 
 import (
-	"html/template"
-	"regexp"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/nt2311-vn/go-fiber/pkg/validation"
 )
 
-func renderTemplate(c *fiber.Ctx, templ string, data interface{}) error {
-	t, err := template.ParseFiles("views/"+templ, "views/navbar.html", "views/footer.html")
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+func ValidateFields(c *fiber.Ctx) error {
+	field := c.Query("field")
+	value := c.Query("value")
+
+	var err error
+
+	switch field {
+	case "email":
+		err = validation.ValidateEmail(value)
+	case "password":
+		err = validation.ValidatePassword(value)
+	case "confirm-password":
+		err = validation.ValidatePasswordConfirm(c.Query("password"), value)
+	default:
+		err = nil
 	}
 
-	return t.Execute(c.Response().BodyWriter(), data)
-}
+	if err != nil {
+		return c.SendString(err.Error())
+	}
 
-func isValidEmail(email string) bool {
-	// Regex validation for email input
-
-	const emailRegexPattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	return regexp.MustCompile(emailRegexPattern).MatchString(email)
+	return c.SendString("")
 }
