@@ -22,7 +22,7 @@ func (c *Client) EmailExists(email string) (bool, error) {
 	escapeEmail := url.QueryEscape(email)
 
 	queryEmailUrl := fmt.Sprintf(
-		"%s/collections/users/records?filter=(email='%s')",
+		"%scollections/users/records?filter=(email='%s')",
 		c.BaseURL,
 		escapeEmail,
 	)
