@@ -2,7 +2,11 @@
 module.exports = {
 	content: ["./views/**/*.html"],
 	theme: {
-		extend: {},
+		extend: {
+			fontFamily: {
+				sans: ["Nurito Sans", "sans-serif"],
+			},
+		},
 	},
 	plugins: [require("daisyui")],
 	daisyui: {
