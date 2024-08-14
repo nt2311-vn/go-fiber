@@ -24,6 +24,7 @@ func main() {
 		Views: engine,
 	})
 	app.Static("/static", filepath.Join("static"))
+	app.Static("/favicon.ico", filepath.Join("static/favicon.ico"))
 
 	app.Use(middleware.AuthMiddleWare)
 
