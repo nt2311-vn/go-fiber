@@ -14,10 +14,6 @@ type RegisterPayload struct {
 	PasswordConfirm string `json:"passwordConfirm"`
 }
 
-type ResponseUser struct {
-	Email string `json:"email"`
-}
-
 func (c *Client) EmailExists(email string) (bool, error) {
 	escapeEmail := url.QueryEscape(email)
 
@@ -55,18 +51,13 @@ func (c *Client) EmailExists(email string) (bool, error) {
 		return false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	var records RecordResponse
+	err = json.NewDecoder(resp.Body).Decode(&records)
 	if err != nil {
 		return false, err
 	}
 
-	items, ok := result["items"].([]interface{})
-	if !ok {
-		return false, fmt.Errorf("unexpected response format")
-	}
-
-	return len(items) > 0, nil
+	return len(records.Items) > 0, nil
 }
 
 func (c *Client) RegisterUser(email, password, passwordConfirm string) error {
