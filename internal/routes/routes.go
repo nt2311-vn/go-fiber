@@ -9,7 +9,8 @@ func Setup(app *fiber.App) {
 	app.Get("/", handlers.HomePage)
 	app.Get("/login", handlers.LoginPage)
 	app.Get("/register", handlers.ReigsterPage)
-	app.Get("/validate-field", handlers.ValidateFields)
+
+	app.Post("/validate-field", handlers.ValidateFields)
 
 	app.Post("/register", handlers.RegisterForm)
 }
