@@ -7,7 +7,7 @@ import (
 
 func ValidateFields(c *fiber.Ctx) error {
 	field := c.Query("field")
-	value := c.Query("value")
+	value := c.Query(field)
 
 	var err error
 
@@ -17,7 +17,8 @@ func ValidateFields(c *fiber.Ctx) error {
 	case "password":
 		err = validation.ValidatePassword(value)
 	case "confirm-password":
-		err = validation.ValidatePasswordConfirm(c.Query("password"), value)
+		password := c.Query("password")
+		err = validation.ValidatePasswordConfirm(password, value)
 	default:
 		err = nil
 	}
