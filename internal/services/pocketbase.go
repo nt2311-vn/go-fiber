@@ -3,12 +3,16 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 )
 
 type Client struct {
-	BaseURL   string
+	BaseURL string
+}
+
+type AuthClient struct {
 	AuthToken string
 }
 
@@ -30,7 +34,7 @@ type AdminAuthResponse struct {
 	Admin Admin  `json:"admin"`
 }
 
-func NewClient() *Client {
+func getAdminToken() (string, error) {
 	adminEmail := os.Getenv("PB_ADMIN_EMAIL")
 	adminPassword := os.Getenv("PB_ADMIN_PASSWORD")
 
@@ -39,15 +43,18 @@ func NewClient() *Client {
 		Password: adminPassword,
 	}
 
-	jsonValue, _ := json.Marshal(adminLogin)
+	jsonVal, err := json.Marshal(adminLogin)
+	if err != nil {
+		return "", fmt.Errorf("cannot login to bytes: %v", err)
+	}
 
 	resp, err := http.Post(
 		os.Getenv("PB_API_URL")+"admins/auth-with-password",
 		"application/json",
-		bytes.NewBuffer(jsonValue),
+		bytes.NewBuffer(jsonVal),
 	)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("cannot login as admin: %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -56,11 +63,14 @@ func NewClient() *Client {
 
 	err = json.NewDecoder(resp.Body).Decode(&adminResponse)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("cannot decode admin response: %v", err)
 	}
 
+	return adminResponse.Token, nil
+}
+
+func NewClient() *Client {
 	return &Client{
-		BaseURL:   os.Getenv("PB_API_URL"),
-		AuthToken: adminResponse.Token,
+		BaseURL: os.Getenv("PB_API_URL"),
 	}
 }

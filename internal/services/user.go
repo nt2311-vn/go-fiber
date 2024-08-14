@@ -36,7 +36,12 @@ func (c *Client) EmailExists(email string) (bool, error) {
 		return false, err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+c.AuthToken)
+	authToken, err := getAdminToken()
+	if err != nil {
+		return false, fmt.Errorf("cannot get admin token: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+authToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
