@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Finance Apps</title>
+    <title>FinOpsX</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/static/css/tailwindcss.css" />
     <script
       src="https://unpkg.com/htmx.org@2.0.2"
@@ -19,7 +23,10 @@
     </script>
   </head>
   <body class="bg-base-100">
-    <div class="min-h-screen flex flex-col">{{ template "navbar" .}}</div>
+    <div class="min-h-screen flex flex-col">
+      {{ template "navbar" .}} {{ template "homehero" .}} {{ template
+      "homefeatures" .}}
+    </div>
     {{ template "footer" .}}
   </body>
 </html>
