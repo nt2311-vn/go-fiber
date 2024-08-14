@@ -6,6 +6,8 @@ var PublicPaths = map[string]bool{
 	"/":         true,
 	"/login":    true,
 	"/register": true,
+	"/validate-field": true,
+	"/simple": true,
 }
 
 func AuthMiddleWare(c *fiber.Ctx) error {
