@@ -1,26 +1,10 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FinOpsX</title>
-    <link rel="stylesheet" href="/static/css/tailwindcss.css" />
-    <script
-      src="https://unpkg.com/htmx.org@2.0.2"
-      integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
-      crossorigin="anonymous"
-    ></script>
-    <script>
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.setAttribute("data-theme", "business");
-      } else {
-        document.documentElement.setAttribute("data-theme", "corporate");
-      }
-    </script>
-  </head>
+  {{ template "base" .}}
   <body class="bg-base-100">
     <div class="min-h-screen flex flex-col">
-      {{ template "navbar" .}} {{ template "loginForm" .}}
+      {{ template "navbar" .}}
+      <main class="flex-grow">{{ template "loginForm" .}}</main>
     </div>
     {{ template "footer" .}}
   </body>
