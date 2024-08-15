@@ -34,7 +34,7 @@ func (c *Client) EmailExists(email string) (bool, error) {
 
 	authToken, err := getAdminToken()
 	if err != nil {
-		return false, fmt.Errorf("cannot get admin token: %v", err)
+		return false, fmt.Errorf("internal error cannot check your email account")
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
