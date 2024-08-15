@@ -36,11 +36,13 @@ func LoginForm(c *fiber.Ctx) error {
 
 	pbClient := services.NewClient()
 
-	err := pbClient.LoginUser(email, password)
+	user, err := pbClient.LoginUser(email, password)
 	if err != nil {
 		return c.SendString(err.Error())
 	}
+	c.Locals("user", user)
 
 	c.Set("HX-Redirect", "/dashboard")
+
 	return c.Status(fiber.StatusOK).SendString("Login successful!")
 }
