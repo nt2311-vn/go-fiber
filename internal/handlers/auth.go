@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/nt2311-vn/go-fiber/internal/services"
 )
@@ -40,8 +42,14 @@ func LoginForm(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendString(err.Error())
 	}
-	c.Cookie(cookie * fiber.Cookie)
-	c.Set("HX-Redirect", "/dashboard")
+	c.Cookie(&fiber.Cookie{
+		Name:     "auth_token",
+		Value:    user.Token,
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+	c.Set("HX-Redirect", "/app/dashboard")
 
-	return c.Status(fiber.StatusOK).SendString("Login successful!")
+	return c.JSON(user)
 }
