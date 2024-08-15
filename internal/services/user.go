@@ -144,28 +144,3 @@ func (c *Client) LoginUser(email, password string) (*UserAuthReponse, error) {
 
 	return &loginResponse, nil
 }
-
-func (c *Client) VerifyUserToken(token, userId string) (*UserResponse, error) {
-	req, err := http.NewRequest("GET", c.BaseURL+"collections/users/records/"+userId, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	var user UserResponse
-	err = json.NewDecoder(resp.Body).Decode(&user)
-	return &user, nil
-}
