@@ -40,8 +40,7 @@ func LoginForm(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendString(err.Error())
 	}
-	c.Locals("user", user)
-
+	c.Cookie(cookie * fiber.Cookie)
 	c.Set("HX-Redirect", "/dashboard")
 
 	return c.Status(fiber.StatusOK).SendString("Login successful!")
