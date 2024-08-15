@@ -24,7 +24,7 @@ type Admin struct {
 	Avatar  int    `json:"avatar"`
 }
 
-type AdminLogin struct {
+type LoginPayload struct {
 	Email    string `json:"identity"`
 	Password string `json:"password"`
 }
@@ -34,11 +34,28 @@ type AdminAuthResponse struct {
 	Admin Admin  `json:"admin"`
 }
 
+type UserAuthReponse struct {
+	Token  string `json:"token"`
+	Record struct {
+		ID              string `json:"id"`
+		CollectionID    string `json:"collectionId"`
+		CollectionName  string `json:"collectionName"`
+		Username        string `json:"username"`
+		Verified        bool   `json:"verified"`
+		EmailVisibility bool   `json:"emailVisibility"`
+		Email           string `json:"email"`
+		Created         string `json:"created"`
+		Updated         string `json:"updated"`
+		Name            string `json:"name"`
+		Avatar          string `json:"avatar"`
+	} `json:"record"`
+}
+
 func getAdminToken() (string, error) {
 	adminEmail := os.Getenv("PB_ADMIN_EMAIL")
 	adminPassword := os.Getenv("PB_ADMIN_PASSWORD")
 
-	adminLogin := AdminLogin{
+	adminLogin := LoginPayload{
 		Email:    adminEmail,
 		Password: adminPassword,
 	}

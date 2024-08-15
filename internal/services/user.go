@@ -95,3 +95,38 @@ func (c *Client) RegisterUser(email, password, passwordConfirm string) error {
 
 	return nil
 }
+
+func (c *Client) LoginUser(email, password string) error {
+	loginPayload := LoginPayload{
+		Email:    email,
+		Password: password,
+	}
+
+	jsonPayload, err := json.Marshal(loginPayload)
+	if err != nil {
+		return fmt.Errorf("cannot marshal payload")
+	}
+
+	resp, err := http.Post(
+		c.BaseURL+"collections/users/auth-with-password",
+		"application/json",
+		bytes.NewBuffer(jsonPayload),
+	)
+	if err != nil {
+		return fmt.Errorf("internal server error")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("invalid email or password")
+	}
+
+	var loginResponse UserAuthReponse
+	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
+	if err != nil {
+		return fmt.Errorf("internal server error")
+	}
+
+	return nil
+}
