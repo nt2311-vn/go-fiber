@@ -30,6 +30,17 @@ func RegisterForm(c *fiber.Ctx) error {
 		SendString("User created successfully! Please login to continue.")
 }
 
-func DashboardPage(c *fiber.Ctx) error {
-	return c.Render("dashboard", "nil")
+func LoginForm(c *fiber.Ctx) error {
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+
+	pbClient := services.NewClient()
+
+	err := pbClient.LoginUser(email, password)
+	if err != nil {
+		return c.SendString(err.Error())
+	}
+
+	c.Set("HX-Redirect", "/dashboard")
+	return c.Status(fiber.StatusOK).SendString("Login successful!")
 }
