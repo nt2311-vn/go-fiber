@@ -29,3 +29,7 @@ func RegisterForm(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).
 		SendString("User created successfully! Please login to continue.")
 }
+
+func DashboardPage(c *fiber.Ctx) error {
+	return c.Render("dashboard", "nil")
+}

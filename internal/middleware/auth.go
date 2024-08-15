@@ -3,11 +3,12 @@ package middleware
 import "github.com/gofiber/fiber/v2"
 
 var PublicPaths = map[string]bool{
-	"/":         true,
-	"/login":    true,
-	"/register": true,
+	"/":               true,
+	"/login":          true,
+	"/register":       true,
 	"/validate-field": true,
-	"/simple": true,
+	"/simple":         true,
+	"/dashboard":      true,
 }
 
 func AuthMiddleWare(c *fiber.Ctx) error {
