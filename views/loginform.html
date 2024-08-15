@@ -1,0 +1,76 @@
+<div class="flex justify-center items-center h-screen bg-100">
+  <div class="card w-full max-w-md shadow-2xl bg-base-300 rounded-lg">
+    <div class="card-body p-8">
+      <h2 class="text-2xl font-bold text-center mb-8">Login to Your Account</h2>
+      <form
+        hx-post="/login"
+        hx-trigger="submit delay:1s"
+        hx-indicator="#spinner"
+        hx-target="#login-error"
+        hx-swap="innerHTML"
+        hx-on="htmx:beforeRequest: if (document.querySelector('#email-error').innerHTML || document.querySelector('#password-error').innerHTML) { event.preventDefault(); }"
+      >
+        <div class="mb-4">
+          <label for="email" class="block text-sm font-medium">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            class="input input-bordered w-full"
+            hx-post="/validate-field?field=email"
+            hx-trigger="blur"
+            hx-target="#email-error"
+          />
+          <div
+            id="email-error"
+            class="text-xs text-red-500 dark:text-red-100"
+          ></div>
+        </div>
+        <div class="mb-6">
+          <label for="password" class="block text-sm font-medium"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            class="input input-bordered w-full"
+            hx-post="/validate-field?field=password"
+            hx-trigger="blur"
+            hx-target="#password-error"
+          />
+          <div
+            id="password-error"
+            class="text-xs text-red-500 dark:text-red-100"
+          ></div>
+        </div>
+        <div
+          id="login-error"
+          class="mb-6 bg-red-500 dark:bg-red-900 text-white text-center border-none rounded-md font-medium"
+        ></div>
+        <button type="submit" class="btn btn-primary w-full">
+          Login
+          <img
+            id="spinner"
+            class="htmx-indicator animate-spin size-5 ml-2"
+            src="/static/icon/spinner.svg"
+            alt="spinner img"
+            style="filter: invert(1) grayscale(100%) contrast(100%)"
+          />
+        </button>
+      </form>
+      <div class="text-center mt-4">
+        <p>
+          Don't have account ?
+          <a
+            href="/register"
+            class="text-blue-500 dark:text-blue-100 hover:underline"
+            >Register</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

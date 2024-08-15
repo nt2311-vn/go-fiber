@@ -1,24 +1,32 @@
 <div class="flex h-screen">
   <div class="w-64 bg-gradient-to-br from-blue-900 to-violet-950 p-4 shadow-lg">
-    <a href="/" class="text-2xl font-bold mb-6 block text-center text-white">
-      FinOpsX
+    <a
+      href="/app/dashboard"
+      class="text-2xl font-bold mb-8 block text-center text-white"
+    >
+      <img
+        src="/static/icon/company_logo.svg"
+        alt="company logo"
+        class="size-18"
+      />
     </a>
-    <ul class="menu">
+    <ul class="menu mt-10">
+      {{ $currentPath := .CurrentPath }} {{ range .SidebarItems }}
       <li>
-        <a href="/dashboard" class="text-white">Dashboard</a>
+        <a
+          href="{{ .Path }}"
+          class="{{ if eq $currentPath .Path }} active {{else }} {{ end }} text-white"
+        >
+          <img
+            src="{{ .Icon }} "
+            alt="{{ .Name }} icon"
+            class="size-6 mr-2"
+            style="filter: invert(1) grayscale(100%) contrast(100%)"
+          />
+          {{ .Name }}
+        </a>
       </li>
-      <li>
-        <a href="/stock" class="text-white">Stock</a>
-      </li>
-      <li>
-        <a href="/sales" class="text-white">Sales</a>
-      </li>
-      <li>
-        <a href="/pnp" class="text-white">Purchase and Payments</a>
-      </li>
-      <li>
-        <a href="/budget" class="text-white">Budget</a>
-      </li>
+      {{ end }}
     </ul>
   </div>
 </div>
