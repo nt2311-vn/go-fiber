@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/nt2311-vn/go-fiber/internal/services"
 )
 
 var PublicPaths = map[string]bool{
@@ -10,21 +9,15 @@ var PublicPaths = map[string]bool{
 	"/login":          true,
 	"/register":       true,
 	"/validate-field": true,
-	"/simple":         true,
-	"/dashboard":      true,
-	"/sales":          true,
-	"/stock":          true,
-	"/pnp":            true,
-	"/budget":         true,
 }
 
 func AuthMiddleWare(c *fiber.Ctx) error {
-	sessionToken := c.Get("Authorization")
+	if isPublicPath(c.Path()) {
+		return c.Next()
+	}
+	token := c.Cookies("auth_token")
 
-	pbClient := services.NewClient()
-
-	_, err := pbClient.VerifyUserToken(sessionToken)
-	if err != nil {
+	if token == "" {
 		return c.Redirect("/login")
 	}
 
