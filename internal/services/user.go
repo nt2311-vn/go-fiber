@@ -14,6 +14,20 @@ type RegisterPayload struct {
 	PasswordConfirm string `json:"passwordConfirm"`
 }
 
+type UserResponse struct {
+	ID              string `json:"id"`
+	CollectionID    string `json:"collectionId"`
+	CollectionName  string `json:"collectionName"`
+	Username        string `json:"username"`
+	Verified        bool   `json:"verified"`
+	EmailVisibility bool   `json:"emailVisibility"`
+	Email           string `json:"email"`
+	Created         string `json:"created"`
+	Updated         string `json:"updated"`
+	Name            string `json:"name"`
+	Avatar          string `json:"avatar"`
+}
+
 func (c *Client) EmailExists(email string) (bool, error) {
 	escapeEmail := url.QueryEscape(email)
 
@@ -96,7 +110,7 @@ func (c *Client) RegisterUser(email, password, passwordConfirm string) error {
 	return nil
 }
 
-func (c *Client) LoginUser(email, password string) error {
+func (c *Client) LoginUser(email, password string) (*UserAuthReponse, error) {
 	loginPayload := LoginPayload{
 		Email:    email,
 		Password: password,
@@ -104,7 +118,7 @@ func (c *Client) LoginUser(email, password string) error {
 
 	jsonPayload, err := json.Marshal(loginPayload)
 	if err != nil {
-		return fmt.Errorf("cannot marshal payload")
+		return nil, fmt.Errorf("cannot marshal payload")
 	}
 
 	resp, err := http.Post(
@@ -113,20 +127,45 @@ func (c *Client) LoginUser(email, password string) error {
 		bytes.NewBuffer(jsonPayload),
 	)
 	if err != nil {
-		return fmt.Errorf("internal server error")
+		return nil, fmt.Errorf("internal server error")
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("invalid email or password")
+		return nil, fmt.Errorf("invalid email or password")
 	}
 
 	var loginResponse UserAuthReponse
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	if err != nil {
-		return fmt.Errorf("internal server error")
+		return nil, fmt.Errorf("internal server error")
 	}
 
-	return nil
+	return &loginResponse, nil
+}
+
+func (c *Client) VerifyUserToken(token, userId string) (*UserResponse, error) {
+	req, err := http.NewRequest("GET", c.BaseURL+"collections/users/records/"+userId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	var user UserResponse
+	err = json.NewDecoder(resp.Body).Decode(&user)
+	return &user, nil
 }
