@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,6 +43,13 @@ func LoginForm(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendString(err.Error())
 	}
+	nsClient, err := services.NewNSClient()
+	if err != nil {
+		return fmt.Errorf("error creating NSClient: %v", err)
+	}
+
+	fmt.Println(nsClient.Token)
+
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
 		Value:    user.Token,
@@ -49,6 +57,7 @@ func LoginForm(c *fiber.Ctx) error {
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
+
 	c.Set("HX-Redirect", "/app/dashboard")
 
 	return c.JSON(user)
