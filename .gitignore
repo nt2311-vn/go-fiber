@@ -22,3 +22,6 @@ pocketbase/pb_data/
 
 # ignore output tailwindcss
 static/css/tailwindcss.css
+
+# privatekey
+finopsx_pri.pem
