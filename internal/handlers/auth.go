@@ -53,3 +53,16 @@ func LoginForm(c *fiber.Ctx) error {
 
 	return c.JSON(user)
 }
+
+func Logout(c *fiber.Ctx) error {
+	c.Cookie(&fiber.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+
+	c.Set("HX-Redirect", "/login")
+	return c.SendStatus(fiber.StatusNoContent)
+}

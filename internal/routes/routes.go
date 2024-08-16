@@ -13,6 +13,7 @@ func Setup(app *fiber.App) {
 	app.Post("/validate-field", handlers.ValidateFields)
 	app.Post("/register", handlers.RegisterForm)
 	app.Post("/login", handlers.LoginForm)
+	app.Post("/logout", handlers.Logout)
 
 	authGroup := app.Group("/app", middleware.AuthMiddleWare)
 	authGroup.Get("/dashboard", handlers.DashboardPage)
