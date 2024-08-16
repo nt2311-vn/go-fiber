@@ -48,7 +48,7 @@ func LoginForm(c *fiber.Ctx) error {
 		return fmt.Errorf("error creating NSClient: %v", err)
 	}
 
-	fmt.Println(nsClient.Token)
+	fmt.Println(nsClient.AuthorizeToken)
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
