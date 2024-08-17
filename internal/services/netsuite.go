@@ -1,16 +1,18 @@
 package services
 
 import (
+	"bytes"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type NSClient struct {
@@ -52,29 +54,35 @@ func newNSClient() *NSClient {
 func (ns *NSClient) signedJWT() string {
 	privateKeyData, err := os.ReadFile("finopsx_pri.pem")
 	if err != nil {
+		fmt.Println("Error reading private key:", err)
+		return ""
+	}
+	block, _ := pem.Decode(privateKeyData)
+
+	if block == nil {
+		fmt.Println("Error decoding private key")
 		return ""
 	}
 
-	privateKey, err := jwt.ParseECPrivateKeyFromPEM(privateKeyData)
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
+		fmt.Println("Error parsing private key:", err)
 		return ""
 	}
 
-	claims := jwt.MapClaims{
-		"iss":   ns.ClientID,
-		"scope": ns.Scope,
-		"aud":   ns.BaseURL + "/auth/oauth2/v1/token",
-		"exp":   time.Now().Add(time.Hour * 24 * 7).Unix(),
-		"iat":   time.Now().Unix(),
-		"jti":   ns.TokenID,
-	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"iss": ns.ClientID,
+		"aud": ns.BaseURL + "/auth/oauth2/v1/token",
+		"exp": time.Now().Add(5 * time.Minute).Unix(),
+		"iat": time.Now().Unix(),
+	})
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	token.Header["typ"] = "JWT"
-	token.Header["alg"] = "ES256"
 	token.Header["kid"] = ns.CertID
+	token.Header["alg"] = "ES256"
+
 	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
+		fmt.Println("Error signing token:", err)
 		return ""
 	}
 
@@ -85,15 +93,15 @@ func RequestToken() *TokenResponse {
 	nsClient := newNSClient()
 	jwt := nsClient.signedJWT()
 
-	formData := url.Values{}
-	formData.Set("grant_type", nsClient.GrantType)
-	formData.Set("client_assertion_type", nsClient.AssertType)
-	formData.Set("client_assertion", jwt)
+	form := url.Values{}
+	form.Add("grant_type", nsClient.GrantType)
+	form.Add("client_assertion_type", nsClient.AssertType)
+	form.Add("client_assertion", jwt)
 
 	resp, err := http.Post(
 		nsClient.BaseURL+"/auth/oauth2/v1/token",
 		"application/x-www-form-urlencoded",
-		strings.NewReader(formData.Encode()),
+		bytes.NewBufferString(form.Encode()),
 	)
 	if err != nil {
 		fmt.Println("Reponse error:", err)
@@ -101,14 +109,13 @@ func RequestToken() *TokenResponse {
 	}
 
 	defer resp.Body.Close()
-	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Headers:", resp.Header)
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading response body:", err)
 		return nil
 	}
+	fmt.Println("Response Status:", resp.Status)
+	fmt.Println("Response Headers:", resp.Header)
 	fmt.Println("Response Body:", string(body))
 
 	var tokenResponse TokenResponse
