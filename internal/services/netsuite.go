@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -84,21 +85,15 @@ func RequestToken() *TokenResponse {
 	nsClient := newNSClient()
 	jwt := nsClient.signedJWT()
 
-	tokenRequest := TokenRequest{
-		GrantType:           nsClient.GrantType,
-		ClientAssertionType: nsClient.AssertType,
-		ClientAssertion:     jwt,
-	}
-
-	jsonRequest, err := json.Marshal(tokenRequest)
-	if err != nil {
-		return nil
-	}
+	formData := url.Values{}
+	formData.Set("grant_type", nsClient.GrantType)
+	formData.Set("client_assertion_type", nsClient.AssertType)
+	formData.Set("client_assertion", jwt)
 
 	resp, err := http.Post(
 		nsClient.BaseURL+"/auth/oauth2/v1/token",
-		"application/json",
-		strings.NewReader(string(jsonRequest)),
+		"application/x-www-form-urlencoded",
+		strings.NewReader(formData.Encode()),
 	)
 	if err != nil {
 		fmt.Println("Reponse error:", err)
