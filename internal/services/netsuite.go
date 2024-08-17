@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,10 +13,14 @@ import (
 )
 
 type NSClient struct {
-	BaseURL        string
-	Scope          string
-	ClientID       string
-	AuthorizeToken string
+	BaseURL    string
+	Scope      string
+	ClientID   string
+	TokenID    string
+	CertID     string
+	AccountID  string
+	GrantType  string
+	AssertType string
 }
 
 type TokenResponse struct {
@@ -32,7 +35,20 @@ type TokenRequest struct {
 	ClientAssertion     string `json:"client_assertion"`
 }
 
-func signedJWT() string {
+func newNSClient() *NSClient {
+	return &NSClient{
+		BaseURL:    os.Getenv("NS_BASE_URL"),
+		Scope:      "rest_webservices",
+		ClientID:   os.Getenv("NS_CLIENT_ID"),
+		TokenID:    os.Getenv("NS_TOKEN_ID"),
+		CertID:     os.Getenv("NS_CERT_ID"),
+		AccountID:  os.Getenv("NS_ACCOUNT_ID"),
+		GrantType:  "client_credentials",
+		AssertType: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+	}
+}
+
+func (ns *NSClient) signedJWT() string {
 	privateKeyData, err := os.ReadFile("finopsx_pri.pem")
 	if err != nil {
 		return ""
@@ -44,17 +60,18 @@ func signedJWT() string {
 	}
 
 	claims := jwt.MapClaims{
-		"iss":   os.Getenv("NS_CONSUMER_KEY"),
-		"scope": "restlets,rest_webservices",
-		"aud":   os.Getenv("NS_BASE_URL") + "/auth/oauth2/v1/token",
+		"iss":   ns.ClientID,
+		"scope": ns.Scope,
+		"aud":   ns.BaseURL + "/auth/oauth2/v1/token",
 		"exp":   time.Now().Add(time.Hour * 24 * 7).Unix(),
 		"iat":   time.Now().Unix(),
+		"jti":   ns.TokenID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 	token.Header["typ"] = "JWT"
-	token.Header["alg"] = "EC"
-	token.Header["kid"] = os.Getenv("NS_CERTIFICATE_ID")
+	token.Header["alg"] = "ES256"
+	token.Header["kid"] = ns.CertID
 	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
 		return ""
@@ -63,28 +80,30 @@ func signedJWT() string {
 	return signedToken
 }
 
-func requestToken() *TokenResponse {
-	jwt := signedJWT()
+func RequestToken() *TokenResponse {
+	nsClient := newNSClient()
+	jwt := nsClient.signedJWT()
 
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+	tokenRequest := TokenRequest{
+		GrantType:           nsClient.GrantType,
+		ClientAssertionType: nsClient.AssertType,
+		ClientAssertion:     jwt,
+	}
 
-	data.Set("client_assertion", jwt)
-
-	req, err := http.NewRequest(
-		"POST",
-		os.Getenv("NS_BASE_URL")+"/auth/oauth2/v1/token",
-		strings.NewReader(data.Encode()),
-	)
+	jsonRequest, err := json.Marshal(tokenRequest)
 	if err != nil {
 		return nil
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.Post(
+		nsClient.BaseURL+"/auth/oauth2/v1/token",
+		"application/json",
+		strings.NewReader(string(jsonRequest)),
+	)
+	if err != nil {
+		fmt.Println("Reponse error:", err)
+		return nil
+	}
 
 	defer resp.Body.Close()
 	fmt.Println("Response Status:", resp.Status)
@@ -107,16 +126,4 @@ func requestToken() *TokenResponse {
 	fmt.Println(tokenResponse.AccessToken)
 
 	return &tokenResponse
-}
-
-func NewNSClient() (*NSClient, error) {
-	tokenResponse := requestToken()
-	if tokenResponse == nil {
-		return nil, fmt.Errorf("cannot get ns token")
-	}
-
-	return &NSClient{
-		BaseURL:        os.Getenv("NS_BASE_URL"),
-		AuthorizeToken: tokenResponse.AccessToken,
-	}, nil
 }
