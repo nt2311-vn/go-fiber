@@ -1,28 +1,35 @@
 package services
 
 import (
-	"crypto/rand"
-	"encoding/base64"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type NSClient struct {
-	BaseURL     string
 	AccessToken string
 }
 
+type AppID struct {
+	ClientID   string
+	ClientSec  string
+	CertID     string
+	GrantType  string
+	Scope      string
+	AssertType string
+	BaseURL    string
+}
+
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    string `json:"expires_in"`
-	TokenType    string `json:"token_type"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   string `json:"expires_in"`
+	TokenType   string `json:"token_type"`
 }
 
 type TokenRequest struct {
@@ -31,90 +38,85 @@ type TokenRequest struct {
 	ClientAssertion     string `json:"client_assertion"`
 }
 
-func generateState() (string, error) {
-	randomBytes := make([]byte, 32)
-
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		return "", nil
+func createApp() *AppID {
+	return &AppID{
+		ClientID:   os.Getenv("NS_CONSUMER_KEY"),
+		ClientSec:  os.Getenv("NS_CONSUMER_SECRET"),
+		CertID:     os.Getenv("NS_CERT_ID"),
+		GrantType:  "client_credentials",
+		Scope:      "rest_webservices",
+		AssertType: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		BaseURL:    os.Getenv("NS_BASE_URL"),
 	}
-
-	state := base64.URLEncoding.EncodeToString(randomBytes)
-	return state, nil
 }
 
-func OAuthURL() string {
-	state, err := generateState()
+func (app *AppID) signedToken() (string, error) {
+	byteKey, err := os.ReadFile("private.pem")
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("error reading private key: %v", err)
 	}
 
-	params := url.Values{}
-	params.Set("response_type", "code")
-	params.Set("client_id", os.Getenv("NS_CONSUMER_KEY"))
-	params.Set("redirect_uri", os.Getenv("NS_REDIRECT_URI"))
-	params.Set("scope", "rest_webservices")
-	params.Set("state", state)
+	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(byteKey)
+	if err != nil {
+		return "", fmt.Errorf("error parsing private key: %v", err)
+	}
 
-	redirectURL := os.Getenv("NS_AUTH_ENDPOINT") + "?" + params.Encode()
-	return redirectURL
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodPS256, jwt.MapClaims{
+		"iss":   app.ClientID,
+		"scope": app.Scope,
+		"aud":   app.BaseURL + "/auth/oauth2/v1/token",
+		"exp":   time.Now().Add(time.Minute * 5).Unix(),
+		"iat":   time.Now().Unix(),
+	})
+
+	jwtToken.Header["alg"] = "PS256"
+	jwtToken.Header["typ"] = "JWT"
+	jwtToken.Header["kid"] = app.CertID
+
+	tokenString, err := jwtToken.SignedString(priKey)
+	if err != nil {
+		return "", fmt.Errorf("error signing token: %v", err)
+	}
+
+	return tokenString, nil
 }
 
-func ExchangeToken(code string) (*TokenResponse, error) {
-	data := url.Values{}
-	data.Set("code", code)
-	data.Set("redirect_uri", os.Getenv("NS_REDIRECT_URI"))
-	data.Set("grant_type", "authorization_code")
+func NewNSClient() (*NSClient, error) {
+	app := createApp()
+	token, err := app.signedToken()
+	if err != nil {
+		return nil, fmt.Errorf("error signed token:%v", err)
+	}
+
+	form := url.Values{}
+	form.Add("grant_type", app.GrantType)
+	form.Add("client_assertion_type", app.AssertType)
+	form.Add("client_assertion", token)
 
 	req, err := http.NewRequest(
 		"POST",
-		os.Getenv("NS_BASE_URL")+"/auth/oauth2/v1/token",
-		strings.NewReader(data.Encode()),
+		app.BaseURL+"/auth/oauth2/v1/token",
+		bytes.NewBufferString(form.Encode()),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	auth := base64.StdEncoding.EncodeToString(
-		[]byte(os.Getenv("NS_CONSUMER_KEY") + ":" + os.Getenv("NS_CONSUMER_SECRET")),
-	)
-	req.Header.Set("Authorization", "Basic "+auth)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error sending request: %v", err)
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to exchange token: %s", resp.Status)
+	var tokenResp TokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, fmt.Errorf("error decoding response: %v, token: %v", err, tokenResp)
 	}
 
-	token := &TokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(token)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func NewNSClient(c *fiber.Ctx) (*NSClient, error) {
-	code := c.Query("code")
-	if code == "" {
-		return nil, fmt.Errorf("authorization code not found")
-	}
-	fmt.Println(code)
-	token, err := ExchangeToken(code)
-	if err != nil {
-		return nil, err
-	}
-
-	return &NSClient{
-		BaseURL:     os.Getenv("NS_BASE_URL"),
-		AccessToken: token.AccessToken,
-	}, nil
+	return &NSClient{AccessToken: tokenResp.AccessToken}, nil
 }
