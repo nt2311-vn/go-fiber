@@ -23,6 +23,7 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
+
 	app.Static("/static", filepath.Join("static"))
 	app.Static("/favicon.ico", filepath.Join("static/favicon.ico"))
 
