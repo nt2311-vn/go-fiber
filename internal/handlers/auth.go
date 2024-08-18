@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -44,18 +43,10 @@ func LoginForm(c *fiber.Ctx) error {
 		return c.SendString(err.Error())
 	}
 
-	c.Set("HX-Redirect", "start-oauth")
-
-	if c.Query("code") == "" {
-		return fmt.Errorf("authorization code not found")
-	}
-
-	nsClient, err := services.NewNSClient(c)
+	nsClient, err := services.NewNSClient()
 	if err != nil {
 		return c.SendString(err.Error())
 	}
-
-	fmt.Println(nsClient.AccessToken)
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
@@ -66,7 +57,6 @@ func LoginForm(c *fiber.Ctx) error {
 	})
 
 	c.Set("HX-Redirect", "/app/dashboard")
-
 	return c.JSON(user)
 }
 
@@ -81,23 +71,4 @@ func Logout(c *fiber.Ctx) error {
 
 	c.Set("HX-Redirect", "/login")
 	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func StartOAuth(c *fiber.Ctx) error {
-	fmt.Println(services.OAuthURL())
-	return c.Redirect(services.OAuthURL())
-}
-
-func AuthCallBack(c *fiber.Ctx) error {
-	code := c.Query("code")
-	if code == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "Authorization code not found")
-	}
-
-	_, err := services.ExchangeToken(code)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
-
-	return c.Redirect("/app/dashboard")
 }
