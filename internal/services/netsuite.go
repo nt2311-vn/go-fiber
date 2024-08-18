@@ -1,29 +1,24 @@
 package services
 
 import (
-	"bytes"
-	"crypto/x509"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type NSClient struct {
-	BaseURL    string
-	Scope      string
-	ClientID   string
-	TokenID    string
-	CertID     string
-	AccountID  string
-	GrantType  string
-	AssertType string
+	BaseURL      string
+	Scope        string
+	ClientID     string
+	State        string
+	RedirectURI  string
+	ResponseType string
+	AuthURL      string
 }
 
 type TokenResponse struct {
@@ -38,73 +33,64 @@ type TokenRequest struct {
 	ClientAssertion     string `json:"client_assertion"`
 }
 
-func newNSClient() *NSClient {
-	return &NSClient{
-		BaseURL:    os.Getenv("NS_BASE_URL"),
-		Scope:      "rest_webservices",
-		ClientID:   os.Getenv("NS_CLIENT_ID"),
-		TokenID:    os.Getenv("NS_TOKEN_ID"),
-		CertID:     os.Getenv("NS_CERT_ID"),
-		AccountID:  os.Getenv("NS_ACCOUNT_ID"),
-		GrantType:  "client_credentials",
-		AssertType: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+func generateState() (string, error) {
+	randomBytes := make([]byte, 32)
+
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", nil
 	}
+
+	state := base64.URLEncoding.EncodeToString(randomBytes)
+	return state, nil
 }
 
-func (ns *NSClient) signedJWT() string {
-	privateKeyData, err := os.ReadFile("finopsx_pri.pem")
+func newNSClient() (*NSClient, error) {
+	state, err := generateState()
 	if err != nil {
-		fmt.Println("Error reading private key:", err)
-		return ""
-	}
-	block, _ := pem.Decode(privateKeyData)
-
-	if block == nil {
-		fmt.Println("Error decoding private key")
-		return ""
+		return nil, err
 	}
 
-	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		fmt.Println("Error parsing private key:", err)
-		return ""
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
-		"iss": ns.ClientID,
-		"aud": ns.BaseURL + "/auth/oauth2/v1/token",
-		"exp": time.Now().Add(5 * time.Minute).Unix(),
-		"iat": time.Now().Unix(),
-	})
-
-	token.Header["kid"] = ns.CertID
-	token.Header["alg"] = "ES256"
-
-	signedToken, err := token.SignedString(privateKey)
-	if err != nil {
-		fmt.Println("Error signing token:", err)
-		return ""
-	}
-
-	return signedToken
+	return &NSClient{
+		ResponseType: "code",
+		BaseURL:      os.Getenv("NS_BASE_URL"),
+		Scope:        "rest_webservices",
+		ClientID:     os.Getenv("NS_CLIENT_ID"),
+		State:        state,
+		RedirectURI:  os.Getenv("NS_REDIRECT_URI"),
+		AuthURL:      "https://5574610.app.netsuite.com/app/login/oauth2/authorize.nl",
+	}, nil
 }
 
 func RequestToken() *TokenResponse {
-	nsClient := newNSClient()
-	jwt := nsClient.signedJWT()
+	nsClient, err := newNSClient()
+	if err != nil {
+		fmt.Println("Error creating NSClient:", err)
+		return nil
+	}
 
 	form := url.Values{}
-	form.Add("grant_type", nsClient.GrantType)
-	form.Add("client_assertion_type", nsClient.AssertType)
-	form.Add("client_assertion", jwt)
+	form.Add("response_type", nsClient.ResponseType)
+	form.Add("client_id", nsClient.ClientID)
+	form.Add("redirect_uri", nsClient.RedirectURI)
+	form.Add("scope", nsClient.Scope)
+	form.Add("state", nsClient.State)
 
-	resp, err := http.Post(
-		nsClient.BaseURL+"/auth/oauth2/v1/token",
-		"application/x-www-form-urlencoded",
-		bytes.NewBufferString(form.Encode()),
+	req, err := http.NewRequest(
+		"GET",
+		nsClient.AuthURL+"?"+form.Encode(), nil,
 	)
 	if err != nil {
-		fmt.Println("Reponse error:", err)
+		fmt.Println("Error creating request:", err)
+		return nil
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
 		return nil
 	}
 
