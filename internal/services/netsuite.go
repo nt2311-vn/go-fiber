@@ -3,12 +3,10 @@ package services
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type NSClient struct {
@@ -55,63 +53,28 @@ func newNSClient() (*NSClient, error) {
 		ResponseType: "code",
 		BaseURL:      os.Getenv("NS_BASE_URL"),
 		Scope:        "rest_webservices",
-		ClientID:     os.Getenv("NS_CLIENT_ID"),
+		ClientID:     os.Getenv("NS_CONSUMER_KEY"),
 		State:        state,
 		RedirectURI:  os.Getenv("NS_REDIRECT_URI"),
 		AuthURL:      "https://5574610.app.netsuite.com/app/login/oauth2/authorize.nl",
 	}, nil
 }
 
-func RequestToken() *TokenResponse {
-	nsClient, err := newNSClient()
+func GetToken(c *fiber.Ctx) error {
+	ns, err := newNSClient()
 	if err != nil {
-		fmt.Println("Error creating NSClient:", err)
-		return nil
+		return err
 	}
 
-	form := url.Values{}
-	form.Add("response_type", nsClient.ResponseType)
-	form.Add("client_id", nsClient.ClientID)
-	form.Add("redirect_uri", nsClient.RedirectURI)
-	form.Add("scope", nsClient.Scope)
-	form.Add("state", nsClient.State)
+	params := url.Values{}
 
-	req, err := http.NewRequest(
-		"GET",
-		nsClient.AuthURL+"?"+form.Encode(), nil,
-	)
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return nil
-	}
+	params.Add("response_type", ns.ResponseType)
+	params.Add("client_id", ns.ClientID)
+	params.Add("scope", ns.Scope)
+	params.Add("state", ns.State)
+	params.Add("redirect_uri", ns.RedirectURI)
 
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	redirectURL := ns.AuthURL + "?" + params.Encode()
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return nil
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return nil
-	}
-	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Headers:", resp.Header)
-	fmt.Println("Response Body:", string(body))
-
-	var tokenResponse TokenResponse
-	err = json.NewDecoder(resp.Body).Decode(&tokenResponse)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	fmt.Println(tokenResponse.AccessToken)
-
-	return &tokenResponse
+	return c.Redirect(redirectURL, fiber.StatusTemporaryRedirect)
 }

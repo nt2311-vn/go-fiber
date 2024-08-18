@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -43,12 +42,6 @@ func LoginForm(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendString(err.Error())
 	}
-	tokenResp := services.RequestToken()
-	if err != nil {
-		return fmt.Errorf("error creating NSClient: %v", err)
-	}
-
-	fmt.Println(tokenResp.AccessToken)
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
