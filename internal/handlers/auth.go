@@ -44,6 +44,19 @@ func LoginForm(c *fiber.Ctx) error {
 		return c.SendString(err.Error())
 	}
 
+	c.Set("HX-Redirect", "start-oauth")
+
+	if c.Query("code") == "" {
+		return fmt.Errorf("authorization code not found")
+	}
+
+	nsClient, err := services.NewNSClient(c)
+	if err != nil {
+		return c.SendString(err.Error())
+	}
+
+	fmt.Println(nsClient.AccessToken)
+
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
 		Value:    user.Token,
@@ -71,7 +84,8 @@ func Logout(c *fiber.Ctx) error {
 }
 
 func StartOAuth(c *fiber.Ctx) error {
-	return c.Redirect(services.OauthURL(c))
+	fmt.Println(services.OAuthURL())
+	return c.Redirect(services.OAuthURL())
 }
 
 func AuthCallBack(c *fiber.Ctx) error {
@@ -80,12 +94,10 @@ func AuthCallBack(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Authorization code not found")
 	}
 
-	token, err := services.ExchangeToken(code)
+	_, err := services.ExchangeToken(code)
 	if err != nil {
-		return c.SendString(err.Error())
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	fmt.Println(token.AccessToken)
-
-	return c.JSON(token)
+	return c.Redirect("/app/dashboard")
 }

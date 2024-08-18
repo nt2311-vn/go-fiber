@@ -5,19 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-)
-
-var (
-	Scope     = "rest_webservices"
-	ClientID  = os.Getenv("NS_CONSUMER_KEY")
-	ClientSec = os.Getenv("NS_CONSUMER_SECRET")
 )
 
 type NSClient struct {
@@ -50,7 +43,7 @@ func generateState() (string, error) {
 	return state, nil
 }
 
-func OauthURL(c *fiber.Ctx) string {
+func OAuthURL() string {
 	state, err := generateState()
 	if err != nil {
 		return ""
@@ -96,9 +89,6 @@ func ExchangeToken(code string) (*TokenResponse, error) {
 
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(resp.Body)
-	fmt.Println(string(respBody))
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to exchange token: %s", resp.Status)
 	}
@@ -114,6 +104,10 @@ func ExchangeToken(code string) (*TokenResponse, error) {
 
 func NewNSClient(c *fiber.Ctx) (*NSClient, error) {
 	code := c.Query("code")
+	if code == "" {
+		return nil, fmt.Errorf("authorization code not found")
+	}
+	fmt.Println(code)
 	token, err := ExchangeToken(code)
 	if err != nil {
 		return nil, err
