@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,7 +49,7 @@ func LoginForm(c *fiber.Ctx) error {
 		Value:    user.Token,
 		Expires:  time.Now().Add(7 * 24 * time.Hour),
 		HTTPOnly: true,
-		SameSite: "Strict",
+		SameSite: "None",
 	})
 
 	c.Set("HX-Redirect", "/app/dashboard")
@@ -62,9 +63,29 @@ func Logout(c *fiber.Ctx) error {
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		HTTPOnly: true,
-		SameSite: "Strict",
+		SameSite: "None",
 	})
 
 	c.Set("HX-Redirect", "/login")
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func StartOAuth(c *fiber.Ctx) error {
+	return c.Redirect(services.OauthURL(c))
+}
+
+func AuthCallBack(c *fiber.Ctx) error {
+	code := c.Query("code")
+	if code == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Authorization code not found")
+	}
+
+	token, err := services.ExchangeToken(code)
+	if err != nil {
+		return c.SendString(err.Error())
+	}
+
+	fmt.Println(token.AccessToken)
+
+	return c.JSON(token)
 }

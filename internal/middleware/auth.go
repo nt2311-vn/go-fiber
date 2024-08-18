@@ -9,6 +9,7 @@ var PublicPaths = map[string]bool{
 	"/login":          true,
 	"/register":       true,
 	"/validate-field": true,
+	"/auth/callback":  true,
 }
 
 func AuthMiddleWare(c *fiber.Ctx) error {
