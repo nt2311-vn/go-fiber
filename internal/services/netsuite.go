@@ -14,6 +14,7 @@ import (
 
 type NSClient struct {
 	AccessToken string
+	BaseURL     string
 }
 
 type AppID struct {
@@ -118,5 +119,8 @@ func NewNSClient() (*NSClient, error) {
 		return nil, fmt.Errorf("error decoding response: %v, token: %v", err, tokenResp)
 	}
 
-	return &NSClient{AccessToken: tokenResp.AccessToken}, nil
+	return &NSClient{AccessToken: tokenResp.AccessToken, BaseURL: app.BaseURL}, nil
+}
+
+func (ns *NSClient) GetUser(email string) {
 }

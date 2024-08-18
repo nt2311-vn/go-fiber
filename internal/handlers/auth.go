@@ -43,17 +43,12 @@ func LoginForm(c *fiber.Ctx) error {
 		return c.SendString(err.Error())
 	}
 
-	nsClient, err := services.NewNSClient()
-	if err != nil {
-		return c.SendString(err.Error())
-	}
-
 	c.Cookie(&fiber.Cookie{
 		Name:     "auth_token",
 		Value:    user.Token,
 		Expires:  time.Now().Add(7 * 24 * time.Hour),
 		HTTPOnly: true,
-		SameSite: "None",
+		SameSite: "Strict",
 	})
 
 	c.Set("HX-Redirect", "/app/dashboard")
@@ -66,7 +61,7 @@ func Logout(c *fiber.Ctx) error {
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		HTTPOnly: true,
-		SameSite: "None",
+		SameSite: "Strict",
 	})
 
 	c.Set("HX-Redirect", "/login")
