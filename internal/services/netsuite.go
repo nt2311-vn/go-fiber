@@ -3,26 +3,33 @@ package services
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
+var (
+	Scope     = "rest_webservices"
+	ClientID  = os.Getenv("NS_CONSUMER_KEY")
+	ClientSec = os.Getenv("NS_CONSUMER_SECRET")
+)
+
 type NSClient struct {
-	BaseURL      string
-	Scope        string
-	ClientID     string
-	State        string
-	RedirectURI  string
-	ResponseType string
-	AuthURL      string
+	BaseURL     string
+	AccessToken string
 }
 
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   string `json:"expires_in"`
-	TokenType   string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    string `json:"expires_in"`
+	TokenType    string `json:"token_type"`
 }
 
 type TokenRequest struct {
@@ -43,38 +50,77 @@ func generateState() (string, error) {
 	return state, nil
 }
 
-func newNSClient() (*NSClient, error) {
+func OauthURL(c *fiber.Ctx) string {
 	state, err := generateState()
+	if err != nil {
+		return ""
+	}
+
+	params := url.Values{}
+	params.Set("response_type", "code")
+	params.Set("client_id", os.Getenv("NS_CONSUMER_KEY"))
+	params.Set("redirect_uri", os.Getenv("NS_REDIRECT_URI"))
+	params.Set("scope", "rest_webservices")
+	params.Set("state", state)
+
+	redirectURL := os.Getenv("NS_AUTH_ENDPOINT") + "?" + params.Encode()
+	return redirectURL
+}
+
+func ExchangeToken(code string) (*TokenResponse, error) {
+	data := url.Values{}
+	data.Set("code", code)
+	data.Set("redirect_uri", os.Getenv("NS_REDIRECT_URI"))
+	data.Set("grant_type", "authorization_code")
+
+	req, err := http.NewRequest(
+		"POST",
+		os.Getenv("NS_BASE_URL")+"/auth/oauth2/v1/token",
+		strings.NewReader(data.Encode()),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	auth := base64.StdEncoding.EncodeToString(
+		[]byte(os.Getenv("NS_CONSUMER_KEY") + ":" + os.Getenv("NS_CONSUMER_SECRET")),
+	)
+	req.Header.Set("Authorization", "Basic "+auth)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(respBody))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to exchange token: %s", resp.Status)
+	}
+
+	token := &TokenResponse{}
+	err = json.NewDecoder(resp.Body).Decode(token)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func NewNSClient(c *fiber.Ctx) (*NSClient, error) {
+	code := c.Query("code")
+	token, err := ExchangeToken(code)
 	if err != nil {
 		return nil, err
 	}
 
 	return &NSClient{
-		ResponseType: "code",
-		BaseURL:      os.Getenv("NS_BASE_URL"),
-		Scope:        "rest_webservices",
-		ClientID:     os.Getenv("NS_CONSUMER_KEY"),
-		State:        state,
-		RedirectURI:  os.Getenv("NS_REDIRECT_URI"),
-		AuthURL:      "https://5574610.app.netsuite.com/app/login/oauth2/authorize.nl",
+		BaseURL:     os.Getenv("NS_BASE_URL"),
+		AccessToken: token.AccessToken,
 	}, nil
-}
-
-func GetToken(c *fiber.Ctx) error {
-	ns, err := newNSClient()
-	if err != nil {
-		return err
-	}
-
-	params := url.Values{}
-
-	params.Add("response_type", ns.ResponseType)
-	params.Add("client_id", ns.ClientID)
-	params.Add("scope", ns.Scope)
-	params.Add("state", ns.State)
-	params.Add("redirect_uri", ns.RedirectURI)
-
-	redirectURL := ns.AuthURL + "?" + params.Encode()
-
-	return c.Redirect(redirectURL, fiber.StatusTemporaryRedirect)
 }
