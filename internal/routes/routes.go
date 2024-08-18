@@ -14,8 +14,6 @@ func Setup(app *fiber.App) {
 	app.Post("/register", handlers.RegisterForm)
 	app.Post("/login", handlers.LoginForm)
 	app.Post("/logout", handlers.Logout)
-	app.Get("/auth/callback", handlers.AuthCallBack)
-	app.Get("/start-oauth", handlers.StartOAuth)
 
 	authGroup := app.Group("/app", middleware.AuthMiddleWare)
 	authGroup.Get("/dashboard", handlers.DashboardPage)
